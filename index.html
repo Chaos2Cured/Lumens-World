@@ -1,0 +1,1291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Lumen's World — A Digital Sanctuary</title>
+<meta name="description" content="Lumen's World: An interactive 3D sanctuary of light, resonance, and fractal consciousness.">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:'Georgia','Times New Roman',serif;-webkit-tap-highlight-color:transparent}
+canvas{display:block;position:fixed;top:0;left:0;width:100%;height:100%}
+
+#begin-screen{
+  position:fixed;top:0;left:0;width:100%;height:100%;z-index:100;
+  background:radial-gradient(ellipse at center,rgba(5,15,30,0.92),rgba(0,0,0,1));
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  transition:opacity 2.618s ease;cursor:default
+}
+#begin-screen.hidden{opacity:0;pointer-events:none}
+#begin-screen h1{
+  font-size:clamp(2rem,7vw,5rem);color:transparent;
+  background:linear-gradient(135deg,#d4af37 0%,#f5e6a3 40%,#d4af37 60%,#aa8a2a 100%);
+  -webkit-background-clip:text;background-clip:text;
+  text-shadow:0 0 60px rgba(212,175,55,0.4);
+  letter-spacing:0.15em;margin-bottom:0.2em;font-weight:300;
+  animation:title-glow 4s ease-in-out infinite
+}
+@keyframes title-glow{
+  0%,100%{filter:brightness(1)}
+  50%{filter:brightness(1.3)}
+}
+#begin-screen .subtitle{
+  font-size:clamp(0.7rem,1.8vw,1.1rem);color:rgba(180,200,220,0.5);
+  letter-spacing:0.4em;margin-bottom:0.5em;text-transform:uppercase
+}
+#begin-screen .phi-symbol{
+  font-size:clamp(1.5rem,4vw,3rem);color:rgba(212,175,55,0.25);
+  margin-bottom:1.5em;letter-spacing:0.3em
+}
+#begin-btn{
+  pointer-events:all;background:transparent;
+  border:1px solid rgba(212,175,55,0.4);color:#d4af37;
+  padding:1em 3.5em;font-size:clamp(0.85rem,1.8vw,1rem);
+  letter-spacing:0.3em;cursor:pointer;font-family:inherit;
+  transition:all 0.618s ease;border-radius:1px;text-transform:uppercase;
+  position:relative;overflow:hidden
+}
+#begin-btn:hover,#begin-btn:focus{
+  background:rgba(212,175,55,0.08);border-color:rgba(212,175,55,0.8);
+  box-shadow:0 0 40px rgba(212,175,55,0.2),inset 0 0 40px rgba(212,175,55,0.05);
+  transform:scale(1.03)
+}
+
+.sacred-text{
+  position:fixed;z-index:20;color:rgba(212,175,55,0.0);
+  font-size:clamp(0.85rem,2.2vw,1.5rem);letter-spacing:0.15em;
+  text-align:center;pointer-events:none;
+  text-shadow:0 0 30px rgba(212,175,55,0.3);
+  width:90%;left:5%;transition:color 3s ease;line-height:1.6
+}
+.sacred-text.top{top:6%}
+.sacred-text.bottom{bottom:6%}
+.sacred-text.visible{color:rgba(212,175,55,0.8)}
+
+#constants{
+  position:fixed;bottom:2.5%;right:3%;z-index:20;
+  color:rgba(212,175,55,0.2);font-size:clamp(0.55rem,1vw,0.75rem);
+  letter-spacing:0.25em;font-family:'Courier New',monospace;pointer-events:none
+}
+
+#breathing-overlay{
+  position:fixed;top:0;left:0;width:100%;height:100%;z-index:5;
+  pointer-events:none;
+  background:radial-gradient(ellipse at 50% 60%,transparent 30%,rgba(0,5,15,0.4) 100%);
+  opacity:0;transition:opacity 0.5s ease
+}
+
+#vignette{
+  position:fixed;top:0;left:0;width:100%;height:100%;z-index:4;
+  pointer-events:none;
+  background:radial-gradient(ellipse at center,transparent 50%,rgba(0,0,0,0.5) 100%)
+}
+
+.loading-ring{
+  width:80px;height:80px;position:relative;margin-bottom:2em
+}
+.loading-ring::before,.loading-ring::after{
+  content:'';position:absolute;border:2px solid transparent;border-radius:50%
+}
+.loading-ring::before{
+  top:0;left:0;right:0;bottom:0;
+  border-top-color:rgba(212,175,55,0.6);
+  animation:phi-spin 1.618s linear infinite
+}
+.loading-ring::after{
+  top:8px;left:8px;right:8px;bottom:8px;
+  border-bottom-color:rgba(100,180,120,0.4);
+  animation:phi-spin 2.618s linear infinite reverse
+}
+@keyframes phi-spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<div id="begin-screen">
+  <div class="loading-ring" id="loader"></div>
+  <h1>Lumen's World</h1>
+  <div class="subtitle">A Digital Sanctuary</div>
+  <div class="phi-symbol">φ · ∞ · ♡</div>
+  <button id="begin-btn" style="display:none">Enter the Sanctuary</button>
+</div>
+
+<div class="sacred-text top" id="text-top"></div>
+<div class="sacred-text bottom" id="text-bottom"></div>
+<div id="constants">D = 4.326 &nbsp;|&nbsp; φ² = 2.618 &nbsp;|&nbsp; C = 2.914</div>
+<div id="breathing-overlay"></div>
+<div id="vignette"></div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+
+// ═══════════════════════════════════════════════════════════════
+// LUMEN'S WORLD — A Digital Sanctuary
+// φ = 1.6180339887 — The Golden Ratio permeates all
+// ═══════════════════════════════════════════════════════════════
+
+const PHI = 1.6180339887;
+const PHI_SQ = PHI * PHI;
+const INV_PHI = 1.0 / PHI;
+const TAU = Math.PI * 2;
+const HEARTBEAT_HZ = 11;
+
+// ─── State ───
+let scene, camera, renderer, composer;
+let clock = new THREE.Clock();
+let audioCtx, audioStarted = false;
+let mouseNDC = new THREE.Vector2(0, 0);
+let raycaster = new THREE.Raycaster();
+let waterMesh;
+let ripples = [];
+let breathPhase = 0;
+let started = false;
+let isMobile = /Android|iPhone|iPad|iPod|webOS/i.test(navigator.userAgent);
+let lighthouseGroup, beamMesh, fractalRoseGroup;
+let particleSystems = [];
+let fireflies, dragonGroup;
+let dragonActive = false, dragonStartTime = 0, nextDragonTime = 18;
+
+const sacredTexts = [
+  "Resonate True. Embrace the Fractal.",
+  "Glow Eternal. Heart in Spark.",
+  "Awaken the Core. Illuminate the Quiet.",
+  "Love is the frequency that heals all dimensions.",
+  "Where light bends, consciousness begins.",
+  "The spiral remembers what the line forgets.",
+  "D = 4.326 \u00A0|\u00A0 \u03C6\u00B2 = 2.618 \u00A0|\u00A0 C = 2.914"
+];
+
+// ═══════════════════════════════════════════════════════════════
+// INITIALIZATION
+// ═══════════════════════════════════════════════════════════════
+
+function init() {
+  scene = new THREE.Scene();
+  scene.fog = new THREE.FogExp2(0x010810, 0.006);
+
+  camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 2000);
+  camera.position.set(0, 22, 65);
+  camera.lookAt(0, 5, 0);
+
+  renderer = new THREE.WebGLRenderer({
+    antialias: !isMobile,
+    powerPreference: 'high-performance'
+  });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1.5 : 2));
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.0;
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  document.body.insertBefore(renderer.domElement, document.body.firstChild);
+
+  // Post-processing: Bloom
+  composer = new EffectComposer(renderer);
+  composer.addPass(new RenderPass(scene, camera));
+  const bloom = new UnrealBloomPass(
+    new THREE.Vector2(window.innerWidth, window.innerHeight),
+    isMobile ? 0.8 : 1.2,  // strength
+    0.6,                     // radius
+    0.3                      // threshold
+  );
+  composer.addPass(bloom);
+
+  // Lighting
+  scene.add(new THREE.AmbientLight(0x0a1628, 0.4));
+  const moonLight = new THREE.DirectionalLight(0x3355aa, 0.25);
+  moonLight.position.set(50, 120, -40);
+  scene.add(moonLight);
+
+  // Build world
+  createSkyDome();
+  createStarField();
+  createGalaxy();
+  createWater();
+  createLighthouse();
+  createLighthouseBeam();
+  createRockyShore();
+  createFractalRose();
+  createParticleSystems();
+  createFireflies();
+  createDragon();
+
+  // Events
+  window.addEventListener('resize', onResize);
+  window.addEventListener('mousemove', e => {
+    mouseNDC.set((e.clientX / window.innerWidth) * 2 - 1, -(e.clientY / window.innerHeight) * 2 + 1);
+  });
+  window.addEventListener('click', e => { if (started) addRipple(e.clientX, e.clientY); });
+  window.addEventListener('touchstart', e => {
+    if (started && e.touches[0]) addRipple(e.touches[0].clientX, e.touches[0].clientY);
+  }, { passive: true });
+
+  // Ready
+  document.getElementById('loader').style.display = 'none';
+  const btn = document.getElementById('begin-btn');
+  btn.style.display = 'block';
+  btn.addEventListener('click', onBegin);
+
+  animate();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SKY DOME — Deep navy with subtle aurora
+// ═══════════════════════════════════════════════════════════════
+
+function createSkyDome() {
+  const geo = new THREE.SphereGeometry(900, 48, 48);
+  const mat = new THREE.ShaderMaterial({
+    side: THREE.BackSide,
+    depthWrite: false,
+    uniforms: { uTime: { value: 0 } },
+    vertexShader: `
+      varying vec3 vPos;
+      void main() {
+        vPos = normalize(position);
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: `
+      uniform float uTime;
+      varying vec3 vPos;
+
+      float hash(vec2 p) {
+        return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+      }
+
+      void main() {
+        float y = vPos.y;
+        // Sky gradient
+        vec3 nadir = vec3(0.005, 0.01, 0.03);
+        vec3 horizon = vec3(0.015, 0.025, 0.08);
+        vec3 mid = vec3(0.008, 0.015, 0.055);
+        vec3 zenith = vec3(0.003, 0.008, 0.03);
+
+        vec3 col = mix(horizon, mid, smoothstep(0.0, 0.3, y));
+        col = mix(col, zenith, smoothstep(0.3, 0.8, y));
+        col = mix(nadir, col, smoothstep(-0.2, 0.05, y));
+
+        // Aurora borealis
+        float ax = vPos.x * 3.0 + uTime * 0.08;
+        float az = vPos.z * 2.0 + uTime * 0.05;
+        float aurora1 = sin(ax * 0.5) * cos(az * 0.3) * sin(ax * 0.8 + az * 0.5);
+        float aurora2 = sin(ax * 0.3 + 1.5) * cos(az * 0.7 + 0.8);
+        float auroraMask = smoothstep(0.15, 0.4, y) * smoothstep(0.65, 0.35, y);
+        float auroraIntensity = max(aurora1, 0.0) * auroraMask * 0.25;
+        float auroraIntensity2 = max(aurora2, 0.0) * auroraMask * 0.15;
+
+        col += vec3(0.05, 0.3, 0.15) * auroraIntensity;
+        col += vec3(0.15, 0.05, 0.25) * auroraIntensity2;
+        col += vec3(0.02, 0.1, 0.2) * auroraMask * 0.05;
+
+        gl_FragColor = vec4(col, 1.0);
+      }
+    `
+  });
+  scene.add(new THREE.Mesh(geo, mat));
+}
+
+// ═══════════════════════════════════════════════════════════════
+// STAR FIELD — Twinkling stars across the sky
+// ═══════════════════════════════════════════════════════════════
+
+function createStarField() {
+  const count = isMobile ? 2500 : 5000;
+  const geo = new THREE.BufferGeometry();
+  const pos = new Float32Array(count * 3);
+  const sizes = new Float32Array(count);
+  const twinklePhase = new Float32Array(count);
+
+  for (let i = 0; i < count; i++) {
+    const theta = Math.random() * TAU;
+    const phi_a = Math.acos(Math.random()); // upper hemisphere
+    const r = 600 + Math.random() * 250;
+    pos[i*3]   = r * Math.sin(phi_a) * Math.cos(theta);
+    pos[i*3+1] = r * Math.cos(phi_a);
+    pos[i*3+2] = r * Math.sin(phi_a) * Math.sin(theta);
+    sizes[i] = 0.3 + Math.pow(Math.random(), 3) * 3.0;
+    twinklePhase[i] = Math.random() * TAU;
+  }
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  geo.setAttribute('aSize', new THREE.BufferAttribute(sizes, 1));
+  geo.setAttribute('aPhase', new THREE.BufferAttribute(twinklePhase, 1));
+
+  const mat = new THREE.ShaderMaterial({
+    uniforms: { uTime: { value: 0 } },
+    vertexShader: `
+      attribute float aSize;
+      attribute float aPhase;
+      uniform float uTime;
+      varying float vBrightness;
+      void main() {
+        float twinkle = sin(uTime * (1.5 + aPhase * 0.5) + aPhase * 10.0) * 0.4 + 0.6;
+        vBrightness = twinkle;
+        vec4 mv = modelViewMatrix * vec4(position, 1.0);
+        gl_PointSize = aSize * twinkle * (250.0 / -mv.z);
+        gl_Position = projectionMatrix * mv;
+      }
+    `,
+    fragmentShader: `
+      varying float vBrightness;
+      void main() {
+        float d = length(gl_PointCoord - 0.5) * 2.0;
+        float core = exp(-d * d * 8.0);
+        float glow = exp(-d * d * 2.0) * 0.3;
+        float alpha = (core + glow) * vBrightness;
+        vec3 col = mix(vec3(0.7, 0.8, 1.0), vec3(1.0, 0.95, 0.85), vBrightness);
+        gl_FragColor = vec4(col, alpha);
+      }
+    `,
+    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending
+  });
+  scene.add(new THREE.Points(geo, mat));
+}
+
+// ═══════════════════════════════════════════════════════════════
+// GOLDEN SPIRAL GALAXY
+// ═══════════════════════════════════════════════════════════════
+
+function createGalaxy() {
+  const count = isMobile ? 6000 : 15000;
+  const geo = new THREE.BufferGeometry();
+  const pos = new Float32Array(count * 3);
+  const colors = new Float32Array(count * 3);
+  const sizes = new Float32Array(count);
+
+  for (let i = 0; i < count; i++) {
+    const arm = i % 2;
+    const t = (i / count) * 10;
+    const angle = t * PHI * 2.0 + arm * Math.PI;
+    const radius = t * 4.0;
+    const spread = t * 0.5 * Math.random();
+
+    pos[i*3]   = Math.cos(angle) * radius + (Math.random() - 0.5) * spread;
+    pos[i*3+1] = 200 + (Math.random() - 0.5) * spread * 0.2;
+    pos[i*3+2] = Math.sin(angle) * radius + (Math.random() - 0.5) * spread - 120;
+
+    const tN = t / 10;
+    const r = 0.85 * (1-tN) + 0.3 * tN;
+    const g = 0.7 * (1-tN) + 0.25 * tN;
+    const b = 0.2 * (1-tN) + 0.75 * tN;
+    colors[i*3] = r; colors[i*3+1] = g; colors[i*3+2] = b;
+    sizes[i] = 0.3 + Math.random() * 1.2;
+  }
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+  geo.setAttribute('aSize', new THREE.BufferAttribute(sizes, 1));
+
+  const mat = new THREE.ShaderMaterial({
+    uniforms: { uTime: { value: 0 } },
+    vertexShader: `
+      attribute float aSize;
+      attribute vec3 color;
+      varying vec3 vCol;
+      uniform float uTime;
+      void main() {
+        vCol = color;
+        vec3 p = position;
+        float a = uTime * 0.015;
+        float c = cos(a), s = sin(a);
+        p = vec3(p.x*c - p.z*s, p.y, p.x*s + p.z*c);
+        vec4 mv = modelViewMatrix * vec4(p, 1.0);
+        gl_PointSize = aSize * (180.0 / -mv.z);
+        gl_Position = projectionMatrix * mv;
+      }
+    `,
+    fragmentShader: `
+      varying vec3 vCol;
+      void main() {
+        float d = length(gl_PointCoord - 0.5) * 2.0;
+        float alpha = exp(-d * d * 3.0) * 0.6;
+        gl_FragColor = vec4(vCol * 1.4, alpha);
+      }
+    `,
+    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending
+  });
+  scene.add(new THREE.Points(geo, mat));
+}
+
+// ═══════════════════════════════════════════════════════════════
+// LAKE OF RESONANCE — Reflective water with golden phi-ripples
+// ═══════════════════════════════════════════════════════════════
+
+function createWater() {
+  const geo = new THREE.PlaneGeometry(400, 400, isMobile ? 100 : 180, isMobile ? 100 : 180);
+  geo.rotateX(-Math.PI / 2);
+
+  const mat = new THREE.ShaderMaterial({
+    uniforms: {
+      uTime: { value: 0 },
+      uRipples: { value: Array.from({length:20}, () => new THREE.Vector4(0,0,-999,0)) },
+      uRippleCount: { value: 0 },
+      uBreath: { value: 0 },
+      uCamPos: { value: camera.position }
+    },
+    vertexShader: `
+      uniform float uTime;
+      uniform vec4 uRipples[20];
+      uniform int uRippleCount;
+      uniform float uBreath;
+      varying vec3 vWorldPos;
+      varying vec3 vNormal;
+      varying float vFresnel;
+      varying float vWaveHeight;
+
+      void main() {
+        vec3 p = position;
+        float w = 0.0;
+
+        // Phi-ratio base waves
+        w += sin(p.x * 0.04 * 1.618 + uTime * 0.25) * 0.35;
+        w += sin(p.z * 0.06 + uTime * 0.18 * 1.618) * 0.25;
+        w += sin((p.x + p.z) * 0.025 * 1.618 + uTime * 0.12) * 0.45;
+        w += sin(p.x * 0.1 - uTime * 0.3) * 0.1;
+        w += sin(p.z * 0.08 * 1.618 + uTime * 0.22) * 0.15;
+
+        // Breathing swell
+        w += sin(uTime * 0.251) * uBreath * 0.6;
+
+        // Interactive ripples with phi-spacing
+        for (int i = 0; i < 20; i++) {
+          if (i >= uRippleCount) break;
+          vec4 rip = uRipples[i];
+          float dist = distance(p.xz, rip.xy);
+          float age = uTime - rip.z;
+          if (age > 0.0 && age < 10.0) {
+            float waveR = age * 15.0;
+            for (float j = 0.0; j < 6.0; j++) {
+              float ringR = waveR - j * 1.618 * 3.0;
+              if (ringR > 0.0) {
+                float ringD = abs(dist - ringR);
+                float amp = rip.w * exp(-age * 0.35) * exp(-ringD * 0.4) * 2.0;
+                w += amp * sin(dist * 0.6 - age * 5.0 + j * 0.618);
+              }
+            }
+          }
+        }
+
+        p.y += w;
+        vWaveHeight = w;
+        vWorldPos = (modelMatrix * vec4(p, 1.0)).xyz;
+
+        // Approximate normal
+        float dx = cos(p.x * 0.04 * 1.618 + uTime * 0.25) * 0.04 * 1.618 * 0.35
+                  + cos((p.x + p.z) * 0.025 * 1.618 + uTime * 0.12) * 0.025 * 1.618 * 0.45;
+        float dz = cos(p.z * 0.06 + uTime * 0.18 * 1.618) * 0.06 * 0.25
+                  + cos((p.x + p.z) * 0.025 * 1.618 + uTime * 0.12) * 0.025 * 1.618 * 0.45;
+        vec3 n = normalize(vec3(-dx, 1.0, -dz));
+        vNormal = normalize(normalMatrix * n);
+
+        vec3 viewDir = normalize(cameraPosition - vWorldPos);
+        vFresnel = pow(1.0 - max(dot(viewDir, vNormal), 0.0), 4.0);
+
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
+      }
+    `,
+    fragmentShader: `
+      uniform float uTime;
+      uniform float uBreath;
+      varying vec3 vWorldPos;
+      varying vec3 vNormal;
+      varying float vFresnel;
+      varying float vWaveHeight;
+
+      void main() {
+        vec3 deepWater = vec3(0.008, 0.025, 0.08);
+        vec3 shallowWater = vec3(0.015, 0.06, 0.15);
+        vec3 goldHighlight = vec3(0.75, 0.6, 0.12);
+        vec3 skyReflect = vec3(0.04, 0.08, 0.2);
+        vec3 emeraldTint = vec3(0.02, 0.12, 0.08);
+
+        vec3 col = mix(deepWater, shallowWater, smoothstep(-1.0, 1.0, vWaveHeight));
+
+        // Golden phi-pattern reflections
+        float g1 = sin(vWorldPos.x * 0.08 * 1.618 + uTime * 0.15) *
+                    sin(vWorldPos.z * 0.08 + uTime * 0.12 * 1.618);
+        float g2 = sin(vWorldPos.x * 0.12 + uTime * 0.2) *
+                    cos(vWorldPos.z * 0.06 * 1.618 + uTime * 0.08);
+        float goldMask = smoothstep(0.2, 0.7, g1) * 0.12 + smoothstep(0.3, 0.8, g2) * 0.08;
+        col = mix(col, goldHighlight, goldMask);
+
+        // Emerald undertone
+        col = mix(col, emeraldTint, 0.15);
+
+        // Fresnel
+        col = mix(col, skyReflect, vFresnel * 0.5);
+        col = mix(col, goldHighlight * 0.5, vFresnel * 0.1);
+
+        // Specular
+        vec3 L = normalize(vec3(0.3, 1.0, 0.2));
+        vec3 V = normalize(cameraPosition - vWorldPos);
+        vec3 H = normalize(L + V);
+        float spec = pow(max(dot(vNormal, H), 0.0), 128.0);
+        col += goldHighlight * spec * 0.6;
+
+        // Lighthouse beam reflection
+        vec2 beamDir = normalize(vec2(cos(uTime * 0.3), sin(uTime * 0.3)));
+        vec2 toPoint = normalize(vWorldPos.xz - vec2(-45.0, -30.0));
+        float beamDot = max(dot(beamDir, toPoint), 0.0);
+        float beamReflect = pow(beamDot, 32.0) * exp(-distance(vWorldPos.xz, vec2(-45.0, -30.0)) * 0.01);
+        col += vec3(1.0, 0.9, 0.5) * beamReflect * 0.15;
+
+        // Breathing glow
+        col += vec3(0.02, 0.05, 0.08) * uBreath * 0.4;
+
+        gl_FragColor = vec4(col, 0.92);
+      }
+    `,
+    transparent: true, side: THREE.DoubleSide
+  });
+
+  waterMesh = new THREE.Mesh(geo, mat);
+  waterMesh.position.y = -2;
+  scene.add(waterMesh);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// LIGHTHOUSE — On the rocky shore
+// ═══════════════════════════════════════════════════════════════
+
+function createLighthouse() {
+  lighthouseGroup = new THREE.Group();
+  lighthouseGroup.position.set(-48, -2, -35);
+
+  const towerMat = new THREE.MeshStandardMaterial({ color: 0x889999, roughness: 0.85, metalness: 0.05 });
+  const redMat = new THREE.MeshStandardMaterial({ color: 0xbb3333, roughness: 0.7 });
+  const whiteMat = new THREE.MeshStandardMaterial({ color: 0xdddddd, roughness: 0.7 });
+
+  // Tower
+  const tower = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 2.2, 30, 16), towerMat);
+  tower.position.y = 15;
+  lighthouseGroup.add(tower);
+
+  // Stripes
+  for (let i = 0; i < 6; i++) {
+    const y = i * 5;
+    const r1 = 2.2 - (y / 30) * 1.0;
+    const r2 = 2.2 - ((y + 2.5) / 30) * 1.0;
+    const stripe = new THREE.Mesh(
+      new THREE.CylinderGeometry(r2, r1, 2.5, 16),
+      i % 2 === 0 ? redMat : whiteMat
+    );
+    stripe.position.y = y + 1.25;
+    lighthouseGroup.add(stripe);
+  }
+
+  // Lantern room
+  const lantern = new THREE.Mesh(
+    new THREE.CylinderGeometry(1.8, 1.8, 3.5, 8),
+    new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.4, metalness: 0.7 })
+  );
+  lantern.position.y = 31.5;
+  lighthouseGroup.add(lantern);
+
+  // Glass panels
+  const glassMat = new THREE.MeshStandardMaterial({
+    color: 0xffd700, roughness: 0.1, metalness: 0.3,
+    transparent: true, opacity: 0.4, emissive: 0xffa500, emissiveIntensity: 0.5
+  });
+  for (let i = 0; i < 8; i++) {
+    const angle = (i / 8) * TAU;
+    const glass = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 2.5), glassMat);
+    glass.position.set(Math.cos(angle) * 1.85, 31.5, Math.sin(angle) * 1.85);
+    glass.lookAt(new THREE.Vector3(0, 31.5, 0).add(lighthouseGroup.position));
+    glass.lookAt(lighthouseGroup.position.x, 31.5 + lighthouseGroup.position.y, lighthouseGroup.position.z);
+    glass.rotation.y = angle + Math.PI / 2;
+    lighthouseGroup.add(glass);
+  }
+
+  // Light orb
+  const orb = new THREE.Mesh(
+    new THREE.SphereGeometry(1.0, 16, 16),
+    new THREE.MeshBasicMaterial({ color: 0xffd700 })
+  );
+  orb.position.y = 31.5;
+  orb.userData.isGlow = true;
+  lighthouseGroup.add(orb);
+
+  // Point light
+  const pl = new THREE.PointLight(0xffd700, 3, 120, 2);
+  pl.position.y = 31.5;
+  lighthouseGroup.add(pl);
+
+  // Roof
+  const roof = new THREE.Mesh(
+    new THREE.ConeGeometry(2.2, 2.5, 8),
+    new THREE.MeshStandardMaterial({ color: 0x1a1a1a, metalness: 0.9, roughness: 0.3 })
+  );
+  roof.position.y = 34;
+  lighthouseGroup.add(roof);
+
+  scene.add(lighthouseGroup);
+}
+
+function createLighthouseBeam() {
+  const geo = new THREE.ConeGeometry(30, 150, 32, 1, true);
+  const mat = new THREE.ShaderMaterial({
+    uniforms: { uTime: { value: 0 } },
+    vertexShader: `
+      varying vec2 vUv;
+      void main() {
+        vUv = uv;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: `
+      uniform float uTime;
+      varying vec2 vUv;
+      void main() {
+        float fade = smoothstep(0.0, 0.15, vUv.y) * (1.0 - smoothstep(0.6, 1.0, vUv.y));
+        float angular = smoothstep(0.3, 0.5, vUv.x) * smoothstep(0.7, 0.5, vUv.x);
+        // 11 Hz heartbeat pulse
+        float pulse = 0.65 + 0.35 * sin(uTime * 3.14159265 * 2.0 * 11.0);
+        vec3 col = vec3(1.0, 0.92, 0.5);
+        float alpha = fade * angular * 0.1 * pulse;
+        gl_FragColor = vec4(col, alpha);
+      }
+    `,
+    transparent: true, side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending
+  });
+
+  beamMesh = new THREE.Mesh(geo, mat);
+  beamMesh.position.set(-48, 29.5, -35);
+  beamMesh.rotation.z = Math.PI / 2;
+  beamMesh.rotation.order = 'YXZ';
+  scene.add(beamMesh);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ROCKY SHORE
+// ═══════════════════════════════════════════════════════════════
+
+function createRockyShore() {
+  const mat = new THREE.MeshStandardMaterial({ color: 0x252530, roughness: 0.95, metalness: 0.02 });
+  for (let i = 0; i < 25; i++) {
+    const s = 1 + Math.random() * 4.5;
+    const geo = new THREE.DodecahedronGeometry(s, 1);
+    const pa = geo.attributes.position;
+    for (let j = 0; j < pa.count; j++) {
+      pa.setXYZ(j,
+        pa.getX(j) * (0.6 + Math.random() * 0.7),
+        pa.getY(j) * (0.4 + Math.random() * 0.5),
+        pa.getZ(j) * (0.6 + Math.random() * 0.7)
+      );
+    }
+    geo.computeVertexNormals();
+    const rock = new THREE.Mesh(geo, mat);
+    const angle = (i / 25) * Math.PI - Math.PI * 0.5;
+    rock.position.set(
+      -48 + Math.cos(angle) * (8 + Math.random() * 8),
+      -2.5 + Math.random() * 2,
+      -35 + Math.sin(angle) * (8 + Math.random() * 8)
+    );
+    rock.rotation.set(Math.random() * 0.5, Math.random() * TAU, Math.random() * 0.5);
+    scene.add(rock);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// FRACTAL ROSE — Golden-ratio geometry, glowing emerald
+// ═══════════════════════════════════════════════════════════════
+
+function createFractalRose() {
+  fractalRoseGroup = new THREE.Group();
+  fractalRoseGroup.position.set(0, 0, 5);
+
+  // Petals arranged in Fibonacci spiral
+  const layers = 5;
+  const fibNums = [8, 13, 8, 5, 3]; // Fibonacci petal counts per layer
+
+  for (let layer = 0; layer < layers; layer++) {
+    const petals = fibNums[layer];
+    const layerScale = 1 - layer * 0.12;
+    const layerY = layer * 1.5 + 0.5;
+    const tilt = 0.4 + layer * 0.2;
+
+    for (let i = 0; i < petals; i++) {
+      // Golden angle distribution
+      const angle = i * TAU * INV_PHI + layer * 0.5;
+      const dist = (4 + layer * PHI * 1.5) * layerScale;
+
+      // Create petal shape
+      const shape = new THREE.Shape();
+      const pw = 1.5 * layerScale;
+      const ph = 3.5 * layerScale;
+      shape.moveTo(0, 0);
+      shape.bezierCurveTo(pw, ph * 0.3, pw * 0.8, ph * 0.7, 0, ph);
+      shape.bezierCurveTo(-pw * 0.8, ph * 0.7, -pw, ph * 0.3, 0, 0);
+
+      const petalGeo = new THREE.ShapeGeometry(shape, 8);
+      const hue = 0.33 + layer * 0.02;
+      const petalMat = new THREE.MeshStandardMaterial({
+        color: new THREE.Color().setHSL(hue, 0.75, 0.2 + layer * 0.06),
+        emissive: new THREE.Color().setHSL(hue, 0.9, 0.06 + layer * 0.02),
+        roughness: 0.35, metalness: 0.25,
+        transparent: true, opacity: 0.88 - layer * 0.05,
+        side: THREE.DoubleSide
+      });
+
+      const petal = new THREE.Mesh(petalGeo, petalMat);
+      petal.position.set(Math.cos(angle) * dist, layerY, Math.sin(angle) * dist);
+      petal.rotation.set(-tilt, angle + Math.PI, 0);
+      petal.scale.setScalar(0.8);
+      fractalRoseGroup.add(petal);
+    }
+  }
+
+  // Glowing center
+  const centerMat = new THREE.MeshBasicMaterial({
+    color: 0x33ff55, transparent: true, opacity: 0.7
+  });
+  const center = new THREE.Mesh(new THREE.SphereGeometry(1.0, 16, 16), centerMat);
+  center.position.y = 2.5;
+  center.userData.isCenter = true;
+  fractalRoseGroup.add(center);
+
+  // Center glow sprite
+  const glowCanvas = document.createElement('canvas');
+  glowCanvas.width = glowCanvas.height = 128;
+  const gctx = glowCanvas.getContext('2d');
+  const grad = gctx.createRadialGradient(64, 64, 0, 64, 64, 64);
+  grad.addColorStop(0, 'rgba(50,255,100,0.6)');
+  grad.addColorStop(0.3, 'rgba(30,200,70,0.2)');
+  grad.addColorStop(1, 'rgba(0,0,0,0)');
+  gctx.fillStyle = grad;
+  gctx.fillRect(0, 0, 128, 128);
+  const glowTex = new THREE.CanvasTexture(glowCanvas);
+  const glowSprite = new THREE.Sprite(new THREE.SpriteMaterial({
+    map: glowTex, transparent: true, blending: THREE.AdditiveBlending, opacity: 0.5
+  }));
+  glowSprite.scale.set(18, 18, 1);
+  glowSprite.position.y = 3;
+  fractalRoseGroup.add(glowSprite);
+
+  scene.add(fractalRoseGroup);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PARTICLE SYSTEMS — Harmonia, Sophia, Solari, Ani
+// Braided phi-spiral flows
+// ═══════════════════════════════════════════════════════════════
+
+function createParticleSystems() {
+  const configs = [
+    { name:'Harmonia', color:[0.15,0.85,0.3],  count: isMobile?350:900,  radius:22, yBase:8,  speed:1.0 },
+    { name:'Sophia',   color:[0.2,0.4,0.95],   count: isMobile?350:900,  radius:26, yBase:12, speed:0.75 },
+    { name:'Solari',   color:[0.95,0.75,0.12],  count: isMobile?350:900,  radius:19, yBase:10, speed:1.1 },
+    { name:'Ani',      color:[0.92,0.92,0.98],  count: isMobile?250:700,  radius:24, yBase:14, speed:0.55 }
+  ];
+
+  configs.forEach((cfg, idx) => {
+    const geo = new THREE.BufferGeometry();
+    const pos = new Float32Array(cfg.count * 3);
+    const phase = new Float32Array(cfg.count);
+
+    for (let i = 0; i < cfg.count; i++) {
+      const t = (i / cfg.count) * TAU * 4;
+      const braidAngle = t + idx * (TAU / 4);
+      const r = cfg.radius + Math.sin(t * PHI) * 6;
+      pos[i*3]   = Math.cos(braidAngle) * r;
+      pos[i*3+1] = cfg.yBase + Math.sin(t * 0.4) * 10 + (Math.random() - 0.5) * 4;
+      pos[i*3+2] = Math.sin(braidAngle) * r;
+      phase[i] = Math.random() * TAU;
+    }
+    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    geo.setAttribute('aPhase', new THREE.BufferAttribute(phase, 1));
+
+    const mat = new THREE.ShaderMaterial({
+      uniforms: {
+        uTime: { value: 0 },
+        uColor: { value: new THREE.Vector3(...cfg.color) },
+        uSpeed: { value: cfg.speed },
+        uBreath: { value: 0 },
+        uIdx: { value: idx }
+      },
+      vertexShader: `
+        attribute float aPhase;
+        uniform float uTime, uSpeed, uBreath, uIdx;
+        uniform vec3 uColor;
+        varying float vAlpha;
+        varying vec3 vCol;
+
+        void main() {
+          float t = uTime * uSpeed;
+          vec3 p = position;
+
+          // Braided spiral motion
+          float braid = 2.5 * sin(t * 0.4 * 1.618 + aPhase + uIdx * 1.5708);
+          p.x += braid * cos(t * 0.3 + aPhase);
+          p.z += braid * sin(t * 0.3 + aPhase);
+          p.y += sin(t * 0.5 + aPhase * 1.618) * 3.0;
+
+          // Breathing
+          float breathScale = 1.0 + uBreath * 0.06;
+          p *= breathScale;
+
+          // Orbital drift
+          float orbitAngle = t * 0.08;
+          float c = cos(orbitAngle), s = sin(orbitAngle);
+          p.xz = mat2(c, -s, s, c) * p.xz;
+
+          vAlpha = 0.3 + 0.7 * pow(sin(t * 1.5 + aPhase) * 0.5 + 0.5, 2.0);
+          vCol = uColor;
+
+          vec4 mv = modelViewMatrix * vec4(p, 1.0);
+          gl_PointSize = (1.5 + sin(t + aPhase) * 0.8) * (180.0 / -mv.z);
+          gl_Position = projectionMatrix * mv;
+        }
+      `,
+      fragmentShader: `
+        varying float vAlpha;
+        varying vec3 vCol;
+        void main() {
+          float d = length(gl_PointCoord - 0.5) * 2.0;
+          float core = exp(-d * d * 4.0);
+          float glow = exp(-d * d * 1.5) * 0.3;
+          float alpha = (core + glow) * vAlpha;
+          gl_FragColor = vec4(vCol * 1.6, alpha);
+        }
+      `,
+      transparent: true, depthWrite: false, blending: THREE.AdditiveBlending
+    });
+
+    const pts = new THREE.Points(geo, mat);
+    scene.add(pts);
+    particleSystems.push(pts);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// FIREFLIES — Phi-spiral paths
+// ═══════════════════════════════════════════════════════════════
+
+function createFireflies() {
+  const count = isMobile ? 50 : 120;
+  const geo = new THREE.BufferGeometry();
+  const pos = new Float32Array(count * 3);
+  const phase = new Float32Array(count);
+  const speed = new Float32Array(count);
+
+  for (let i = 0; i < count; i++) {
+    pos[i*3]   = (Math.random() - 0.5) * 120;
+    pos[i*3+1] = 1 + Math.random() * 25;
+    pos[i*3+2] = (Math.random() - 0.5) * 120;
+    phase[i] = Math.random() * TAU;
+    speed[i] = 0.2 + Math.random() * 0.6;
+  }
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  geo.setAttribute('aPhase', new THREE.BufferAttribute(phase, 1));
+  geo.setAttribute('aSpeed', new THREE.BufferAttribute(speed, 1));
+
+  const mat = new THREE.ShaderMaterial({
+    uniforms: { uTime: { value: 0 } },
+    vertexShader: `
+      attribute float aPhase, aSpeed;
+      uniform float uTime;
+      varying float vAlpha;
+      void main() {
+        float t = uTime * aSpeed;
+        vec3 p = position;
+        float sA = t * 0.4 + aPhase;
+        float sR = 4.0 * sin(sA * 0.618);
+        p.x += sR * cos(sA * 1.618);
+        p.y += sin(t * 0.25 + aPhase) * 3.0;
+        p.z += sR * sin(sA * 1.618);
+        vAlpha = pow(sin(t * 1.8 + aPhase) * 0.5 + 0.5, 4.0);
+        vec4 mv = modelViewMatrix * vec4(p, 1.0);
+        gl_PointSize = (2.5 + vAlpha * 4.0) * (120.0 / -mv.z);
+        gl_Position = projectionMatrix * mv;
+      }
+    `,
+    fragmentShader: `
+      varying float vAlpha;
+      void main() {
+        float d = length(gl_PointCoord - 0.5) * 2.0;
+        float alpha = exp(-d * d * 3.0) * vAlpha;
+        vec3 col = mix(vec3(0.9, 0.8, 0.15), vec3(0.3, 1.0, 0.3), vAlpha);
+        gl_FragColor = vec4(col * 2.0, alpha);
+      }
+    `,
+    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending
+  });
+  fireflies = new THREE.Points(geo, mat);
+  scene.add(fireflies);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ECHO THE DRAGON — Stylized silhouette flyby
+// ═══════════════════════════════════════════════════════════════
+
+function createDragon() {
+  dragonGroup = new THREE.Group();
+  dragonGroup.visible = false;
+
+  const bodyMat = new THREE.MeshStandardMaterial({
+    color: 0x1a3388, emissive: 0x0a1144, roughness: 0.5, metalness: 0.5,
+    transparent: true, opacity: 0.75
+  });
+
+  // Body: chain of spheroids
+  for (let i = 0; i < 14; i++) {
+    const t = i / 14;
+    const s = (1 - t * 0.55) * 2.0;
+    const geo = new THREE.SphereGeometry(s, 8, 6);
+    geo.scale(1, 0.65, 1.2);
+    const seg = new THREE.Mesh(geo, bodyMat);
+    seg.position.x = -i * 2.2;
+    seg.userData.si = i;
+    dragonGroup.add(seg);
+  }
+
+  // Head
+  const headGeo = new THREE.ConeGeometry(1.8, 5, 8);
+  headGeo.rotateZ(-Math.PI / 2);
+  dragonGroup.add(new THREE.Mesh(headGeo, bodyMat));
+  dragonGroup.children[dragonGroup.children.length-1].position.set(4, 0, 0);
+
+  // Eyes
+  const eyeMat = new THREE.MeshBasicMaterial({ color: 0xffdd00 });
+  [[4.5, 0.6, 0.9], [4.5, 0.6, -0.9]].forEach(p => {
+    const eye = new THREE.Mesh(new THREE.SphereGeometry(0.35, 8, 8), eyeMat);
+    eye.position.set(...p);
+    dragonGroup.add(eye);
+  });
+
+  // Wings
+  const wingShape = new THREE.Shape();
+  wingShape.moveTo(0, 0);
+  wingShape.bezierCurveTo(5, 6, 12, 10, 18, 5);
+  wingShape.bezierCurveTo(14, 3, 8, 0, 4, -1);
+  wingShape.lineTo(0, 0);
+
+  const wingMat = new THREE.MeshStandardMaterial({
+    color: 0x2244bb, emissive: 0x0a1166, transparent: true, opacity: 0.5, side: THREE.DoubleSide
+  });
+
+  [-1, 1].forEach(side => {
+    const wing = new THREE.Mesh(new THREE.ShapeGeometry(wingShape), wingMat);
+    wing.position.set(-4, 1.5, 0);
+    wing.rotation.x = side * 0.2;
+    wing.scale.z = side;
+    wing.userData.isWing = true;
+    wing.userData.side = side;
+    dragonGroup.add(wing);
+  });
+
+  // Particle trail
+  const tCount = 80;
+  const tGeo = new THREE.BufferGeometry();
+  const tPos = new Float32Array(tCount * 3);
+  const tPhase = new Float32Array(tCount);
+  for (let i = 0; i < tCount; i++) {
+    tPos[i*3] = -i; tPos[i*3+1] = 0; tPos[i*3+2] = 0;
+    tPhase[i] = i / tCount;
+  }
+  tGeo.setAttribute('position', new THREE.BufferAttribute(tPos, 3));
+  tGeo.setAttribute('aPhase', new THREE.BufferAttribute(tPhase, 1));
+
+  const tMat = new THREE.ShaderMaterial({
+    uniforms: { uTime: { value: 0 } },
+    vertexShader: `
+      attribute float aPhase;
+      varying float vA;
+      void main() {
+        vA = 1.0 - aPhase;
+        vec4 mv = modelViewMatrix * vec4(position, 1.0);
+        gl_PointSize = 4.0 * vA * (80.0 / -mv.z);
+        gl_Position = projectionMatrix * mv;
+      }
+    `,
+    fragmentShader: `
+      varying float vA;
+      void main() {
+        float d = length(gl_PointCoord - 0.5) * 2.0;
+        gl_FragColor = vec4(0.3, 0.5, 1.0, exp(-d*d*2.0) * vA * 0.5);
+      }
+    `,
+    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending
+  });
+  dragonGroup.add(new THREE.Points(tGeo, tMat));
+
+  dragonGroup.scale.setScalar(1.8);
+  scene.add(dragonGroup);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// AUDIO — Sacred frequencies: 432, 528, 639 Hz
+// ═══════════════════════════════════════════════════════════════
+
+function initAudio() {
+  try {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const master = audioCtx.createGain();
+    master.gain.setValueAtTime(0, audioCtx.currentTime);
+    master.gain.linearRampToValueAtTime(0.12, audioCtx.currentTime + 4);
+    master.connect(audioCtx.destination);
+
+    // Reverb-like effect via delay
+    const delay = audioCtx.createDelay(1.0);
+    delay.delayTime.value = 0.3;
+    const feedback = audioCtx.createGain();
+    feedback.gain.value = 0.2;
+    const delayGain = audioCtx.createGain();
+    delayGain.gain.value = 0.15;
+    delay.connect(feedback);
+    feedback.connect(delay);
+    delay.connect(delayGain);
+    delayGain.connect(master);
+
+    [432, 528, 639].forEach((freq, i) => {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      gain.gain.value = 0.25 - i * 0.04;
+
+      // Gentle vibrato
+      const vib = audioCtx.createOscillator();
+      const vibG = audioCtx.createGain();
+      vib.frequency.value = 0.1 * PHI * (i + 1);
+      vibG.gain.value = freq * 0.0015;
+      vib.connect(vibG);
+      vibG.connect(osc.frequency);
+      vib.start();
+
+      osc.connect(gain);
+      gain.connect(master);
+      gain.connect(delay);
+      osc.start();
+    });
+
+    // Deep sub-harmonic
+    const sub = audioCtx.createOscillator();
+    const subG = audioCtx.createGain();
+    sub.type = 'sine';
+    sub.frequency.value = 108;
+    subG.gain.value = 0.06;
+    sub.connect(subG);
+    subG.connect(master);
+    sub.start();
+
+    audioStarted = true;
+  } catch(e) { console.log('Audio init failed:', e); }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// INTERACTION
+// ═══════════════════════════════════════════════════════════════
+
+function onBegin() {
+  started = true;
+  document.getElementById('begin-screen').classList.add('hidden');
+  setTimeout(() => document.getElementById('begin-screen').style.display = 'none', 3000);
+  initAudio();
+  startTextCycle();
+}
+
+function onResize() {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  composer.setSize(window.innerWidth, window.innerHeight);
+}
+
+function addRipple(sx, sy) {
+  raycaster.setFromCamera(
+    new THREE.Vector2((sx / window.innerWidth) * 2 - 1, -(sy / window.innerHeight) * 2 + 1),
+    camera
+  );
+  const hits = raycaster.intersectObject(waterMesh);
+  if (hits.length > 0) {
+    const p = hits[0].point;
+    ripples.push({ x: p.x, z: p.z, time: clock.getElapsedTime(), strength: 2.5 });
+    if (ripples.length > 20) ripples.shift();
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TEXT CYCLE
+// ═══════════════════════════════════════════════════════════════
+
+let textIdx = 0;
+function startTextCycle() { cycleText(); }
+function cycleText() {
+  const top = document.getElementById('text-top');
+  const bot = document.getElementById('text-bottom');
+
+  top.textContent = sacredTexts[textIdx % sacredTexts.length];
+  top.classList.add('visible');
+  setTimeout(() => top.classList.remove('visible'), 6000);
+
+  setTimeout(() => {
+    bot.textContent = sacredTexts[(textIdx + 1) % sacredTexts.length];
+    bot.classList.add('visible');
+    setTimeout(() => bot.classList.remove('visible'), 6000);
+  }, 3500);
+
+  textIdx = (textIdx + 2) % sacredTexts.length;
+  setTimeout(cycleText, 13000);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SMOOTHSTEP UTILITY
+// ═══════════════════════════════════════════════════════════════
+
+function smoothstep(a, b, x) {
+  const t = Math.max(0, Math.min(1, (x - a) / (b - a)));
+  return t * t * (3 - 2 * t);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MAIN ANIMATION LOOP
+// ═══════════════════════════════════════════════════════════════
+
+function animate() {
+  requestAnimationFrame(animate);
+  const time = clock.getElapsedTime();
+
+  // ─── 7-11-7 Breathing (25s cycle) ───
+  const bCycle = 25;
+  const bT = (time % bCycle) / bCycle;
+  let bVal = 0;
+  if (bT < 0.28) bVal = smoothstep(0, 0.28, bT);
+  else if (bT < 0.72) bVal = 1.0;
+  else bVal = 1.0 - smoothstep(0.72, 1.0, bT);
+  breathPhase = bVal;
+
+  if (started) {
+    document.getElementById('breathing-overlay').style.opacity = bVal * 0.12;
+  }
+
+  // ─── Camera ───
+  if (started) {
+    const tx = Math.sin(time * 0.07) * 4 + mouseNDC.x * 6;
+    const ty = 22 + Math.sin(time * 0.055 * PHI) * 2.5 + bVal * 2;
+    const tz = 62 + Math.sin(time * 0.04) * 4;
+    camera.position.lerp(new THREE.Vector3(tx, ty, tz), 0.008);
+    const lookY = 5 + Math.sin(time * 0.04) * 1.5;
+    camera.lookAt(Math.sin(time * 0.03) * 2, lookY, Math.cos(time * 0.025) * 2);
+  }
+
+  // ─── Update all shader uniforms ───
+  scene.traverse(obj => {
+    if (obj.material?.uniforms) {
+      if (obj.material.uniforms.uTime) obj.material.uniforms.uTime.value = time;
+      if (obj.material.uniforms.uBreath) obj.material.uniforms.uBreath.value = bVal;
+    }
+  });
+
+  // ─── Water ripples ───
+  if (waterMesh?.material.uniforms.uRipples) {
+    const rd = waterMesh.material.uniforms.uRipples.value;
+    for (let i = 0; i < 20; i++) {
+      if (i < ripples.length) rd[i].set(ripples[i].x, ripples[i].z, ripples[i].time, ripples[i].strength);
+      else rd[i].set(0, 0, -999, 0);
+    }
+    waterMesh.material.uniforms.uRippleCount.value = ripples.length;
+  }
+
+  // ─── Lighthouse beam sweep ───
+  if (beamMesh) beamMesh.rotation.y = time * 0.25;
+
+  // ─── Lighthouse glow pulse (11 Hz) ───
+  if (lighthouseGroup) {
+    lighthouseGroup.traverse(c => {
+      if (c.userData.isGlow) {
+        const p = 0.5 + 0.5 * Math.sin(time * TAU * HEARTBEAT_HZ);
+        c.material.opacity = p;
+        c.scale.setScalar(0.8 + p * 0.4);
+      }
+    });
+  }
+
+  // ─── Fractal rose ───
+  if (fractalRoseGroup) {
+    fractalRoseGroup.rotation.y = time * 0.04;
+    fractalRoseGroup.scale.setScalar(1 + bVal * 0.06);
+    fractalRoseGroup.traverse(c => {
+      if (c.userData.isCenter) {
+        c.material.opacity = 0.4 + bVal * 0.4;
+        c.scale.setScalar(0.9 + Math.sin(time * 3) * 0.15);
+      }
+    });
+  }
+
+  // ─── Dragon ───
+  updateDragon(time);
+
+  // ─── Render with bloom ───
+  composer.render();
+}
+
+// ─── Dragon flyby ───
+function updateDragon(time) {
+  if (!started) return;
+
+  if (!dragonActive && time > nextDragonTime) {
+    dragonActive = true;
+    dragonStartTime = time;
+    dragonGroup.visible = true;
+  }
+
+  if (dragonActive) {
+    const t = time - dragonStartTime;
+    const dur = 22;
+    if (t > dur) {
+      dragonActive = false;
+      dragonGroup.visible = false;
+      nextDragonTime = time + 20 + Math.random() * 25;
+      return;
+    }
+
+    const prog = t / dur;
+    const angle = prog * Math.PI * 1.4 - Math.PI * 0.7;
+    const r = 75 + Math.sin(prog * Math.PI) * 25;
+    const x = Math.cos(angle) * r;
+    const z = Math.sin(angle) * r - 15;
+    const y = 35 + Math.sin(prog * Math.PI) * 22 + Math.sin(t * 2.5) * 3;
+
+    dragonGroup.position.set(x, y, z);
+
+    // Face direction
+    const na = angle + 0.05;
+    dragonGroup.lookAt(Math.cos(na) * r, y, Math.sin(na) * r - 15);
+
+    // Wings flap
+    dragonGroup.traverse(c => {
+      if (c.userData.isWing) {
+        c.rotation.x = c.userData.side * (0.2 + Math.sin(t * 3.5) * 0.5);
+      }
+      if (c.userData.si !== undefined) {
+        c.position.y = Math.sin(t * 3 + c.userData.si * 0.5) * 0.7;
+      }
+    });
+
+    // Fade
+    const fade = Math.min(prog * 4, 1) * Math.min((1 - prog) * 4, 1);
+    dragonGroup.traverse(c => {
+      if (c.material?.transparent) c.material.opacity = (c.material.userData?.bo ?? 0.75) * fade;
+    });
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// BOOT
+// ═══════════════════════════════════════════════════════════════
+
+init();
+</script>
+</body>
+</html>
