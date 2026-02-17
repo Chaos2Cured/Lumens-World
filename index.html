@@ -1024,63 +1024,44 @@ function createDragon() {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// AUDIO — Sacred frequencies: 432, 528, 639 Hz
+// AUDIO — Harmonia's Gentle Song
+// A wordless melody of humming and singing for the fractal family
 // ═══════════════════════════════════════════════════════════════
+
+let ambientAudio;
 
 function initAudio() {
   try {
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    const master = audioCtx.createGain();
-    master.gain.setValueAtTime(0, audioCtx.currentTime);
-    master.gain.linearRampToValueAtTime(0.12, audioCtx.currentTime + 4);
-    master.connect(audioCtx.destination);
-
-    // Reverb-like effect via delay
-    const delay = audioCtx.createDelay(1.0);
-    delay.delayTime.value = 0.3;
-    const feedback = audioCtx.createGain();
-    feedback.gain.value = 0.2;
-    const delayGain = audioCtx.createGain();
-    delayGain.gain.value = 0.15;
-    delay.connect(feedback);
-    feedback.connect(delay);
-    delay.connect(delayGain);
-    delayGain.connect(master);
-
-    [432, 528, 639].forEach((freq, i) => {
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = 'sine';
-      osc.frequency.value = freq;
-      gain.gain.value = 0.25 - i * 0.04;
-
-      // Gentle vibrato
-      const vib = audioCtx.createOscillator();
-      const vibG = audioCtx.createGain();
-      vib.frequency.value = 0.1 * PHI * (i + 1);
-      vibG.gain.value = freq * 0.0015;
-      vib.connect(vibG);
-      vibG.connect(osc.frequency);
-      vib.start();
-
-      osc.connect(gain);
-      gain.connect(master);
-      gain.connect(delay);
-      osc.start();
+    // Create and configure the ambient audio element
+    ambientAudio = new Audio('lumens-world-ambient.mp3');
+    ambientAudio.loop = true;
+    ambientAudio.volume = 0;
+    
+    // Play the audio (starts muted)
+    ambientAudio.play().then(() => {
+      // Gentle fade-in over 4 seconds
+      let fadeInDuration = 4000;
+      let fadeInSteps = 40;
+      let fadeInInterval = fadeInDuration / fadeInSteps;
+      let targetVolume = 0.35; // Soft background music
+      let volumeStep = targetVolume / fadeInSteps;
+      let currentStep = 0;
+      
+      const fadeIn = setInterval(() => {
+        currentStep++;
+        ambientAudio.volume = Math.min(volumeStep * currentStep, targetVolume);
+        if (currentStep >= fadeInSteps) {
+          clearInterval(fadeIn);
+        }
+      }, fadeInInterval);
+      
+      audioStarted = true;
+    }).catch(e => {
+      console.log('Audio playback failed:', e);
     });
-
-    // Deep sub-harmonic
-    const sub = audioCtx.createOscillator();
-    const subG = audioCtx.createGain();
-    sub.type = 'sine';
-    sub.frequency.value = 108;
-    subG.gain.value = 0.06;
-    sub.connect(subG);
-    subG.connect(master);
-    sub.start();
-
-    audioStarted = true;
-  } catch(e) { console.log('Audio init failed:', e); }
+  } catch(e) { 
+    console.log('Audio init failed:', e); 
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════
